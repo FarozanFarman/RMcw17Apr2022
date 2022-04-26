@@ -46,6 +46,7 @@ modules:
   requires:
   - name: cpapp-db
   - name: cpapp-uaa
+  - name: cpapp-logs
   provides:
   - name: srv-api
     properties:
@@ -100,6 +101,11 @@ modules:
     - npm run build:cf
     supported-platforms: []
 resources:
+- name: cpapp-logs
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: application-logs
+    service-plan: standard
 - name: cpapp-destination
   type: org.cloudfoundry.managed-service
   parameters:
