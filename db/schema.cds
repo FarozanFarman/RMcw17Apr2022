@@ -9,9 +9,14 @@ using { managed } from '@sap/cds/common';
     miti        : Association to Mitigations;
     impact      : Integer;
     criticality : Integer;
-    supplier    : Association to Suppliers;
+    supplier    : Association to Suppliers; 
+    status      : Association to StatusValues;
   }
-
+  @cds.autoexpose
+  entity StatusValues {
+    key value:String;
+    criticality: Integer;
+  }
   entity Mitigations : managed {
     key ID       : UUID  @(Core.Computed : true);
     description  : String;

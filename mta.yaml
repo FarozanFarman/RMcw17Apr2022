@@ -48,6 +48,7 @@ modules:
   - name: cpapp-uaa
   - name: cpapp-logs
   - name: cpapp-destination
+  - name: cpapp-em
   provides:
   - name: srv-api
     properties:
@@ -102,6 +103,23 @@ modules:
     - npm run build:cf
     supported-platforms: []
 resources:
+- name: cpapp-em
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./enterprise-messaging.json
+    service: enterprise-messaging
+    service-plan: default
+- name: cpapp-bupa-messaging
+  type: org.cloudfoundry.managed-service
+  parameters:
+    skip-service-updates:
+        plan: true
+        parameters: true
+        tags: true
+    path: ./bupa-messaging.json
+    service: s4-hana-cloud
+    service-plan: messaging
+    system-name: CPAPP_S4HC_CW16
 - name: cpapp-bupa
   type: org.cloudfoundry.managed-service
   parameters:
@@ -114,7 +132,7 @@ resources:
     system-name: CPAPP_S4HC_CW16
     path: ./bupa-service-config.json
     config:
-        systemName: CPAPP_S4C_CW16
+        systemName: CPAPP_S4HC_CW16
 - name: cpapp-logs
   type: org.cloudfoundry.managed-service
   parameters:

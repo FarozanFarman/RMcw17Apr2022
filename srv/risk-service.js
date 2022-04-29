@@ -1,16 +1,48 @@
 
 const cds = require('@sap/cds')
+const { Risks } = cds.entities;
+const LOG = cds.log('risk-service');
 
 /**
  * Implementation for Risk Management service defined in ./risk-service.cds
  */
 module.exports = cds.service.impl(async function() {
     const bupa = await cds.connect.to('API_BUSINESS_PARTNER');
+    this.after('UPDATE', 'Risks', async (riskData) => {
+        if(riskData.impact > 1000) return;
+        riskData.status_value = 'ASSESSED';
+        await UPDATE(Risks).set({status_value: 'ASSESSED'}).where({ID: riskData.ID});
+    });
 
+    bupa.on( 'Created', async (msg) => {
+        const { BusinessPartner } = msg.data;
+        LOG.info('Received created! BusinessPartner=' + BusinessPartner);
+        await createRisk(BusinessPartner);
+    });
+
+    bupa.on( 'Changed', async (msg) => {
+        const { BusinessPartner } = msg.data;
+        LOG.info('Received changed! BusinessPartner=' + BusinessPartner);
+        if((await SELECT.one.from(Risks).where({supplier_ID: BusinessPartner})).status_value === 'NEW') return;
+        await UPDATE(Risks).set({status_value: 'CHANGED'}).where({'supplier_ID' : BusinessPartner});
+    });
+
+    async function createRisk(businessPartner) {
+        const payload = {
+            title: 'auto: CFR non-compliance',
+            descr: 'New Business Partner might violate CFR code',
+            prio: '1',
+            impact: 200000,
+            supplier_ID: businessPartner,
+            status_value: 'NEW'
+        }
+        LOG.info("Creating auto risk with", payload);
+        await INSERT.into(Risks).entries(payload);
+    }
     this.on('READ', 'Suppliers', async req => {
         return bupa.run(req.query);
     });
-
+    
     this.after('READ', 'Risks', risksData => {
         const risks = Array.isArray(risksData) ? risksData : [risksData];
         risks.forEach(risk => {
